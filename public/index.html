@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Prosper Producción — jueves 27 ago</title>
   <meta name="description" content="Briefing diario MOS: impresiones, blancos, first-pass vs rechazo." />
   <meta name="theme-color" content="#0c0d0f" />
@@ -27,57 +27,82 @@
       --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
     }
     * { box-sizing: border-box; }
-    html, body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--sans); }
-    body { -webkit-font-smoothing: antialiased; }
+    html, body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--sans); overflow-x: clip; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      -webkit-font-smoothing: antialiased;
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
+      padding-bottom: env(safe-area-inset-bottom);
+    }
     a { color: inherit; }
-    .wrap { max-width: 72rem; margin: 0 auto; padding: 1.25rem 1rem 3rem; }
+    .wrap {
+      max-width: 72rem;
+      margin: 0 auto;
+      padding: 1rem max(1rem, env(safe-area-inset-left)) 2.5rem max(1rem, env(safe-area-inset-right));
+    }
     header { border-bottom: 1px solid color-mix(in oklab, var(--fg) 12%, transparent); }
-    header .wrap { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: space-between; align-items: end; padding-bottom: 1.25rem; }
-    .kicker { font-size: 0.75rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0; }
-    h1 { font-size: clamp(1.5rem, 2vw + 1rem, 1.875rem); font-weight: 500; letter-spacing: -0.03em; margin: 0.25rem 0 0; }
-    h2 { font-size: 1.25rem; font-weight: 500; letter-spacing: -0.02em; margin: 0.25rem 0 0; }
+    header .wrap { display: flex; flex-direction: column; gap: 0.75rem; padding-bottom: 1rem; }
+    .kicker { font-size: 0.7rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0; }
+    h1 { font-size: 1.5rem; font-weight: 500; letter-spacing: -0.03em; margin: 0.25rem 0 0; }
+    h2 { font-size: 1.125rem; font-weight: 500; letter-spacing: -0.02em; margin: 0.25rem 0 0; }
     .lede { max-width: 28rem; font-size: 0.875rem; line-height: 1.5; color: var(--muted); margin: 0; }
-    .stack { display: flex; flex-direction: column; gap: 1.25rem; }
-    .card { background: var(--surface); border-radius: 24px; padding: 1.25rem; box-shadow: 0 0 0 1px color-mix(in oklab, var(--fg) 10%, transparent); }
-    .inner { background: var(--raised); border-radius: 12px; padding: 1rem; }
-    .hero { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 1rem; align-items: end; }
+    .stack { display: flex; flex-direction: column; gap: 1rem; }
+    .card { background: var(--surface); border-radius: 20px; padding: 1rem; box-shadow: 0 0 0 1px color-mix(in oklab, var(--fg) 10%, transparent); }
+    .inner { background: var(--raised); border-radius: 12px; padding: 0.75rem; min-width: 0; }
+    .hero { display: flex; flex-direction: column; gap: 0.75rem; align-items: flex-start; }
     .num { font-family: var(--mono); font-variant-numeric: tabular-nums; font-weight: 500; }
-    .xl { font-size: clamp(2.25rem, 4vw, 3rem); letter-spacing: -0.03em; margin: 0.25rem 0 0; }
-    .right { text-align: right; }
+    .xl { font-size: 2.25rem; letter-spacing: -0.03em; margin: 0.25rem 0 0; }
+    .right { text-align: left; }
     .danger { color: var(--danger); }
     .warn { color: var(--warn); }
     .ok { color: var(--ok); }
     .muted { color: var(--muted); }
     .subtle { color: var(--subtle); }
     .sm { font-size: 0.875rem; line-height: 1.5; }
-    .xs { font-size: 0.75rem; line-height: 1.5; }
-    .chart { display: grid; grid-template-columns: repeat(14, minmax(0, 1fr)); gap: 6px; align-items: end; height: 16rem; margin-top: 1.25rem; }
-    .col { display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: end; gap: 6px; }
-    .bar { width: 100%; max-width: 28px; border-radius: 4px 4px 0 0; background: var(--bar); min-height: 2px; }
+    .xs { font-size: 0.75rem; line-height: 1.45; }
+    .chart { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; align-items: end; height: 12.5rem; margin-top: 1rem; }
+    .col { display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: end; gap: 6px; min-width: 0; }
+    .col.wide { display: none; }
+    .bar { width: 100%; max-width: 36px; border-radius: 4px 4px 0 0; background: var(--bar); min-height: 2px; }
     .bar.today { background: var(--accent); }
     .bar.wk { background: var(--grid); }
-    .pace-line { position: relative; }
-    .legend { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 0.75rem; }
+    .legend { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.75rem; }
     .dot { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
     .grid2 { display: grid; gap: 0.75rem; }
-    .grid4 { display: grid; gap: 0.75rem; }
     .split { display: grid; gap: 0.75rem; grid-template-columns: 1fr 1fr; }
-    .pipe { display: grid; gap: 0.75rem; }
+    .pipe { display: grid; gap: 0.75rem; grid-template-columns: 1fr 1fr; }
     .meter { height: 6px; background: var(--bg); border-radius: 999px; overflow: hidden; margin-top: 0.75rem; }
     .meter > span { display: block; height: 100%; border-radius: 999px; }
     ol.actions { margin: 1.25rem 0 0; padding: 0; list-style: none; }
     ol.actions li { display: flex; gap: 0.75rem; font-size: 0.875rem; line-height: 1.5; margin-bottom: 0.5rem; }
-    ol.actions span { font-family: var(--mono); font-size: 0.75rem; color: var(--muted); margin-top: 0.15rem; }
+    ol.actions span { font-family: var(--mono); font-size: 0.75rem; color: var(--muted); margin-top: 0.15rem; flex-shrink: 0; }
     p { margin: 0; }
     .mt { margin-top: 0.75rem; }
     .mt2 { margin-top: 1rem; }
     .row { display: flex; justify-content: space-between; gap: 0.75rem; align-items: start; }
     footer { font-size: 0.75rem; line-height: 1.5; color: var(--muted); }
+    .wd { display: inline; }
+    .dn { display: none; }
     @media (min-width: 640px) {
-      .wrap { padding-left: 1.5rem; padding-right: 1.5rem; }
+      header .wrap { flex-direction: row; flex-wrap: wrap; justify-content: space-between; align-items: end; padding-bottom: 1.25rem; }
+      .wrap { padding: 1.25rem 1.5rem 3rem; }
+      .card { border-radius: 24px; padding: 1.25rem; }
+      .inner { padding: 1rem; }
+      .hero { flex-direction: row; justify-content: space-between; align-items: end; }
+      .right { text-align: right; }
+      .kicker { font-size: 0.75rem; }
+      h1 { font-size: clamp(1.5rem, 2vw + 1rem, 1.875rem); }
+      h2 { font-size: 1.25rem; }
+      .xl { font-size: clamp(2.25rem, 4vw, 3rem); }
       .grid2 { grid-template-columns: 1fr 1fr; }
       .pipe { grid-template-columns: repeat(4, 1fr); }
-      .chart { height: 20rem; }
+      .chart { grid-template-columns: repeat(14, minmax(0, 1fr)); height: 20rem; gap: 6px; }
+      .col.wide { display: flex; }
+      .bar { max-width: 28px; }
+      .wd { display: none; }
+      .dn { display: inline; }
+      .stack { gap: 1.25rem; }
     }
   </style>
 </head>
@@ -107,23 +132,23 @@
       </div>
       <div class="row mt2">
         <h2>Impresiones por día</h2>
-        <p class="xs muted">14 días calendario</p>
+        <p class="xs muted">7 días · 14 en pantalla ancha</p>
       </div>
       <div class="chart" aria-label="Impresiones diarias">
-        <div class="col"><div class="bar" style="height:100%"></div><span class="xs muted">14</span></div>
-        <div class="col"><div class="bar wk" style="height:2%"></div><span class="xs muted">15</span></div>
-        <div class="col"><div class="bar wk" style="height:2%"></div><span class="xs muted">16</span></div>
-        <div class="col"><div class="bar" style="height:100%"></div><span class="xs muted">17</span></div>
-        <div class="col"><div class="bar" style="height:100%"></div><span class="xs muted">18</span></div>
-        <div class="col"><div class="bar" style="height:100%"></div><span class="xs muted">19</span></div>
-        <div class="col"><div class="bar" style="height:100%"></div><span class="xs muted">20</span></div>
-        <div class="col"><div class="bar" style="height:100%"></div><span class="xs muted">21</span></div>
-        <div class="col"><div class="bar wk" style="height:2%"></div><span class="xs muted">22</span></div>
-        <div class="col"><div class="bar wk" style="height:2%"></div><span class="xs muted">23</span></div>
-        <div class="col"><div class="bar" style="height:100%"></div><span class="xs muted">24</span></div>
-        <div class="col"><div class="bar" style="height:100%"></div><span class="xs muted">25</span></div>
-        <div class="col"><div class="bar" style="height:100%"></div><span class="xs muted">26</span></div>
-        <div class="col"><div class="bar today" style="height:54%"></div><span class="xs muted">27</span></div>
+        <div class="col wide"><div class="bar" style="height:100%"></div><span class="xs muted">14</span></div>
+        <div class="col wide"><div class="bar wk" style="height:2%"></div><span class="xs muted">15</span></div>
+        <div class="col wide"><div class="bar wk" style="height:2%"></div><span class="xs muted">16</span></div>
+        <div class="col wide"><div class="bar" style="height:100%"></div><span class="xs muted">17</span></div>
+        <div class="col wide"><div class="bar" style="height:100%"></div><span class="xs muted">18</span></div>
+        <div class="col wide"><div class="bar" style="height:100%"></div><span class="xs muted">19</span></div>
+        <div class="col wide"><div class="bar" style="height:100%"></div><span class="xs muted">20</span></div>
+        <div class="col"><div class="bar" style="height:100%"></div><span class="xs muted"><span class="wd">Vie</span><span class="dn">21</span></span></div>
+        <div class="col"><div class="bar wk" style="height:2%"></div><span class="xs muted"><span class="wd">Sáb</span><span class="dn">22</span></span></div>
+        <div class="col"><div class="bar wk" style="height:2%"></div><span class="xs muted"><span class="wd">Dom</span><span class="dn">23</span></span></div>
+        <div class="col"><div class="bar" style="height:100%"></div><span class="xs muted"><span class="wd">Lun</span><span class="dn">24</span></span></div>
+        <div class="col"><div class="bar" style="height:100%"></div><span class="xs muted"><span class="wd">Mar</span><span class="dn">25</span></span></div>
+        <div class="col"><div class="bar" style="height:100%"></div><span class="xs muted"><span class="wd">Mié</span><span class="dn">26</span></span></div>
+        <div class="col"><div class="bar today" style="height:54%"></div><span class="xs muted"><span class="wd">Hoy</span><span class="dn">27</span></span></div>
       </div>
       <div class="legend xs muted">
         <span><i class="dot" style="background:var(--accent)"></i> Hoy</span>
@@ -176,12 +201,12 @@
         <div class="split mt2">
           <div class="inner">
             <p class="kicker">First-pass</p>
-            <p class="num xl ok" style="font-size:1.875rem">89.31%</p>
+            <p class="num xl ok">89.31%</p>
             <p class="xs muted mt">Unidades que sí pasan. Esto es calidad. 100 − rechazo.</p>
           </div>
           <div class="inner">
             <p class="kicker">Rechazo QC</p>
-            <p class="num xl danger" style="font-size:1.875rem">10.69%</p>
+            <p class="num xl danger">10.69%</p>
             <p class="xs muted mt">Scrap. ~3,902 impresiones/día quemadas.</p>
           </div>
         </div>
