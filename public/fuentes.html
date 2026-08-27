@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Fuentes MOS — Prosper Operaciones</title>
+  <meta name="description" content="De dónde saca el digest #Production cada cifra: colecciones Mongo, endpoints FastAPI, fórmulas y cómo auditarlo." />
+  <meta name="theme-color" content="#0c0d0f" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0c0d0f; --surface: #14161a; --raised: #1b1e24;
+      --fg: #eceae4; --muted: #8b8e96; --danger: #c45c4a; --warn: #c4a574;
+      --sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+      --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--sans); overflow-x: clip; }
+    html { -webkit-text-size-adjust: 100%; }
+    body { -webkit-font-smoothing: antialiased; padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
+    a { color: inherit; }
+    .wrap { max-width: 42rem; margin: 0 auto; padding: 1rem max(1rem, env(safe-area-inset-left)) 3rem; }
+    header { border-bottom: 1px solid color-mix(in oklab, var(--fg) 12%, transparent); }
+    .kicker { font-size: 0.7rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0; }
+    h1 { font-size: 1.5rem; font-weight: 500; letter-spacing: -0.03em; margin: 0.25rem 0 0; }
+    h2 { font-size: 1.125rem; font-weight: 500; letter-spacing: -0.02em; margin: 0.25rem 0 0; }
+    p { margin: 0; }
+    .lede { margin-top: 0.75rem; font-size: 0.875rem; line-height: 1.55; color: var(--muted); }
+    .stack { display: flex; flex-direction: column; gap: 2rem; padding-top: 1.5rem; }
+    .card { background: var(--surface); border-radius: 20px; padding: 1rem; box-shadow: 0 0 0 1px color-mix(in oklab, var(--fg) 10%, transparent); }
+    .list { display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1rem; }
+    .n { font-family: var(--mono); font-size: 0.75rem; color: var(--muted); flex-shrink: 0; }
+    .row { display: flex; gap: 1rem; }
+    .muted { color: var(--muted); }
+    .sm { font-size: 0.875rem; line-height: 1.55; }
+    .xs { font-size: 0.75rem; line-height: 1.45; }
+    .mono { font-family: var(--mono); font-size: 0.75rem; }
+    .xl { font-family: var(--mono); font-size: 1.25rem; font-weight: 500; font-variant-numeric: tabular-nums; margin: 0.25rem 0 0; }
+    .tag { font-size: 0.75rem; background: var(--raised); color: var(--muted); border-radius: 8px; padding: 0.25rem 0.5rem; }
+    .tag.warn { color: var(--warn); }
+    .grid { display: grid; gap: 0.75rem; margin-top: 1rem; }
+    .dl { display: grid; gap: 0.75rem; margin-top: 1rem; }
+    .danger { color: var(--danger); }
+    .head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.75rem; align-items: start; }
+    .mt { margin-top: 0.75rem; }
+    .nav { display: flex; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+    .nav a { display: inline-flex; min-height: 44px; align-items: center; font-size: 0.875rem; color: var(--muted); }
+    footer { font-size: 0.875rem; line-height: 1.55; color: var(--muted); border-top: 1px solid color-mix(in oklab, var(--fg) 12%, transparent); padding-top: 1.5rem; }
+    @media (min-width: 640px) {
+      h1 { font-size: 1.875rem; }
+      h2 { font-size: 1.25rem; }
+      .wrap { padding: 1.25rem 1.5rem 3rem; }
+      .card { padding: 1.25rem; border-radius: 24px; }
+      .two { grid-template-columns: 1fr 1fr; }
+    }
+    @media print {
+      html, body { background: #fff; color: #111; }
+      .nav { display: none; }
+      .card { box-shadow: 0 0 0 1px #ddd; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <div class="nav">
+        <a href="/">← Briefing del día</a>
+      </div>
+      <p class="kicker">Prosper · Operaciones · 27 ago 2026</p>
+      <h1>De dónde sale cada cifra del digest</h1>
+      <p class="lede">Informe para planta, planeación y QC. El post de las 7:30 en #Production no es un score inventado: cada renglón se rastrea a Mongo en MOS. Abajo: la cadena, la fórmula, y cómo auditarlo mañana en la pantalla de MOS.</p>
+    </div>
+  </header>
+
+  <div class="wrap stack">
+    <section>
+      <p class="kicker">Lectura de un minuto</p>
+      <h2>Tres cosas que no se pueden mezclar</h2>
+      <div class="list">
+        <article class="card">
+          <p><strong>1. MOS en vivo</strong></p>
+          <p class="sm muted mt">Tableros, capturas, QC. Cambia con cada log. Reloj: America/Tijuana. API: mosdatabase-backend.k9pirj.easypanel.host.</p>
+        </article>
+        <article class="card">
+          <p><strong>2. El digest de las 7:30</strong></p>
+          <p class="sm muted mt">Un corte publicado a Rocket.Chat #Production. La plantilla no vive en el repo MOS ni en el portal. Es un job aparte. Si capturan a las 8:00, MOS ya cambió y el post no.</p>
+        </article>
+        <article class="card">
+          <p><strong>3. Este briefing</strong></p>
+          <p class="sm muted mt">Lee el post. No abre Mongo. Recalcula first-pass (100 − rechazo), días de blancos (unidades / ritmo) y el gráfico.</p>
+        </article>
+      </div>
+    </section>
+
+    <section>
+      <p class="kicker">Cadena</p>
+      <h2>Del operador al chat</h2>
+      <div class="list">
+        <article class="card row"><span class="n">01</span><div><p><strong>Captura en planta</strong></p><p class="sm muted mt">El operador registra impresiones en MOS. Cada captura inserta un documento en production_logs. WMS y QC escriben en otras colecciones.</p></div></article>
+        <article class="card row"><span class="n">02</span><div><p><strong>Mongo (MOS)</strong></p><p class="sm muted mt">Colecciones vivas: production_logs, orders (tablero), qc_records, neck_logs. Fechas en UTC ISO. Toda ventana “hoy / 7 días” se corta en America/Tijuana.</p></div></article>
+        <article class="card row"><span class="n">03</span><div><p><strong>API FastAPI</strong></p><p class="sm muted mt">GET /api/production-analytics, /api/capacity-plan, /api/orders?board=, /api/qc. Auth de sesión o MASTER_API_KEY. Caché 5 min en agregaciones pesadas.</p></div></article>
+        <article class="card row"><span class="n">04</span><div><p><strong>Digest 7:30</strong></p><p class="sm muted mt">Un job fuera del repo MOS arma el texto y lo publica a #Production. No es el PDF por email (ese scheduler arranca DISABLED, default 19:00, Resend).</p></div></article>
+        <article class="card row"><span class="n">05</span><div><p><strong>Este briefing</strong></p><p class="sm muted mt">Lee el post publicado. No pega directo a Mongo. Recalcula first-pass, días de blancos y el gráfico.</p></div></article>
+      </div>
+    </section>
+
+    <section>
+      <p class="kicker">Unidad</p>
+      <h2>Impresiones, no prendas</h2>
+      <p class="sm mt">Cada captura escribe <span class="mono">quantity_produced</span> por posición (FRENTE, ESPALDA…). MOS lo dice en production-summary: una orden de 500 con dos posiciones no está terminada cuando la suma llega a 1,000 — está terminada cuando cada posición llega a 500. El digest cuenta impresiones. Si ops compara contra “piezas de la orden”, va a ver el doble en jobs de dos posiciones.</p>
+    </section>
+
+    <section>
+      <p class="kicker">Mapa de campos</p>
+      <h2>Cada renglón del post, de dónde sale</h2>
+      <p class="sm muted mt">Ejemplos del corte jueves 27 ago. “Corte del digest” = MOS lo tiene; el número es el del post, no un query en vivo. “Calculado aquí” = MOS no guarda ese campo.</p>
+      <div class="list">
+
+        <article class="card">
+          <div class="head"><div><p class="kicker">Producido hoy</p><p class="xl">19,742</p></div><span class="tag">Corte del digest</span></div>
+          <div class="dl two">
+            <div><p class="kicker">Colección</p><p class="mono mt">production_logs</p></div>
+            <div><p class="kicker">Campo</p><p class="mono mt">quantity_produced → total_produced</p></div>
+            <div style="grid-column:1/-1"><p class="kicker">Endpoint</p><p class="mono mt">GET /api/production-analytics?preset=today</p></div>
+            <div style="grid-column:1/-1"><p class="kicker">Fórmula</p><p class="sm mt">suma(quantity_produced) desde medianoche Tijuana hasta el corte</p></div>
+          </div>
+          <p class="sm muted mt">Son impresiones, no prendas. Un job con FRENTE + ESPALDA cuenta dos veces. No es cierre de turno: es “hasta ahora”.</p>
+        </article>
+
+        <article class="card">
+          <div class="head"><div><p class="kicker">Máquinas</p><p class="xl">12</p></div><span class="tag">Corte del digest</span></div>
+          <div class="dl two">
+            <div><p class="kicker">Colección</p><p class="mono mt">production_logs + orders.board</p></div>
+            <div><p class="kicker">Campo</p><p class="mono mt">machine / board MAQUINA*</p></div>
+            <div style="grid-column:1/-1"><p class="kicker">Endpoint</p><p class="mono mt">GET /api/production-analytics?preset=today (by_machine)</p></div>
+          </div>
+          <p class="sm muted mt">MOS capacity-plan itera MAQUINA1–14. El digest del 27 ago publicó 12. No es el inventario de prensas físicas.</p>
+        </article>
+
+        <article class="card">
+          <div class="head"><div><p class="kicker">Últimos 7 días / ritmo</p><p class="xl">182,517 · 36,503/día</p></div><span class="tag">Corte del digest</span></div>
+          <div class="dl">
+            <div><p class="kicker">Endpoint</p><p class="mono mt">GET /api/production-analytics?preset=week</p></div>
+            <div><p class="kicker">Fórmula</p><p class="sm mt">suma 7 días Tijuana; ritmo = total / días de planta que el digest publica</p></div>
+          </div>
+          <p class="sm muted mt">MOS SÍ tiene serie diaria (by_day, timezone America/Tijuana). El digest 7:30 solo manda el total. Las barras grises del gráfico se dibujan al promedio hasta pegar un digest anterior.</p>
+        </article>
+
+        <article class="card">
+          <div class="head"><div><p class="kicker">En máquina ahora</p><p class="xl">39,905 · 5 trabajos</p></div><span class="tag">Corte del digest</span></div>
+          <div class="dl">
+            <div><p class="kicker">Endpoint</p><p class="mono mt">GET /api/capacity-plan · GET /api/orders?board=MAQUINA1…14</p></div>
+            <div><p class="kicker">Fórmula</p><p class="sm mt">remaining = quantity − producido en logs, tableros MAQUINA*</p></div>
+          </div>
+          <p class="sm muted mt">Trabajo ya cargado a prensa, no impresiones del día.</p>
+        </article>
+
+        <article class="card">
+          <div class="head"><div><p class="kicker">Listo para programar</p><p class="xl">13,083 · 10</p></div><span class="tag">Corte del digest</span></div>
+          <div class="dl">
+            <div><p class="kicker">Endpoint</p><p class="mono mt">GET /api/orders?board=READY TO SCHEDULED</p></div>
+            <div><p class="kicker">Fórmula</p><p class="sm mt">suma quantity de órdenes en ese tablero</p></div>
+          </div>
+          <p class="sm muted mt">Arte/BOM listos, aún no en prensa. Cola corta = no hay con qué rellenar cuando una máquina termina.</p>
+        </article>
+
+        <article class="card">
+          <div class="head"><div><p class="kicker">Esperando blancos</p><p class="xl">343,102 · 191 órdenes</p></div><span class="tag">Corte del digest</span></div>
+          <div class="dl">
+            <div><p class="kicker">Endpoint</p><p class="mono mt">GET /api/orders?board=BLANKS</p></div>
+            <div><p class="kicker">Fórmula</p><p class="sm mt">suma quantity del tablero BLANKS</p></div>
+          </div>
+          <p class="sm muted mt">No es on-hand de WMS. Es cola de órdenes sin tela. Constraint: 9.4 días al ritmo de 36,503.</p>
+        </article>
+
+        <article class="card">
+          <div class="head"><div><p class="kicker">Vencen hoy</p><p class="xl">73,870 · 36 órdenes</p></div><span class="tag">Corte del digest</span></div>
+          <div class="dl">
+            <div><p class="kicker">Colección</p><p class="mono mt">orders · due date = hoy Tijuana</p></div>
+            <div><p class="kicker">Fórmula</p><p class="sm mt">suma quantity de órdenes abiertas con due = hoy</p></div>
+          </div>
+          <p class="sm muted mt">Demanda, no capacidad. 73,870 al ritmo de 36,503 = 2.0 días. No cabe en el turno.</p>
+        </article>
+
+        <article class="card">
+          <div class="head"><div><p class="kicker">Ya atrasadas</p><p class="xl">181,139</p></div><span class="tag">Corte del digest</span></div>
+          <p class="sm muted mt">Órdenes abiertas con due < hoy, excluir COMPLETOS y PAPELERA. Advertencia, no cola ejecutable.</p>
+        </article>
+
+        <article class="card">
+          <div class="head"><div><p class="kicker">Vencen en 7 días</p><p class="xl">107,770 · 40</p></div><span class="tag">Corte del digest</span></div>
+          <p class="sm muted mt">Forward load. Si blancos no se mueven, esto se convierte en atrasadas la semana siguiente.</p>
+        </article>
+
+        <article class="card">
+          <div class="head"><div><p class="kicker">Rechazo QC 7 días</p><p class="xl danger">10.69%</p></div><span class="tag">Corte del digest</span></div>
+          <div class="dl">
+            <div><p class="kicker">Colección</p><p class="mono mt">qc_records</p></div>
+            <div><p class="kicker">Endpoint</p><p class="mono mt">GET /api/qc (date_from / date_to, 7 días)</p></div>
+            <div><p class="kicker">Fórmula</p><p class="sm mt">sum(quantity_rejected) / sum(quantity_inspected) × 100</p></div>
+          </div>
+          <p class="sm muted mt">Unidades, no inspecciones. Distinto de GET /api/qc/stats → pass_rate (PASS records / total records).</p>
+        </article>
+
+        <article class="card">
+          <div class="head"><div><p class="kicker">First-pass (calidad)</p><p class="xl">89.31%</p></div><span class="tag warn">Calculado aquí</span></div>
+          <div class="dl">
+            <div><p class="kicker">MOS</p><p class="sm mt">No existe un score de calidad</p></div>
+            <div><p class="kicker">Fórmula</p><p class="sm mt">100 − rechazo %</p></div>
+          </div>
+          <p class="sm muted mt">El digest viejo titulaba Calidad y pegaba el rechazo. Por eso 10.69% se leía al revés.</p>
+        </article>
+
+        <article class="card">
+          <div class="head"><div><p class="kicker">Proyección</p><p class="xl">36,503</p></div><span class="tag">Corte del digest</span></div>
+          <p class="sm muted mt">El digest reusa el ritmo 7 días. No es un forecast de demanda.</p>
+        </article>
+      </div>
+    </section>
+
+    <section>
+      <p class="kicker">QC</p>
+      <h2>Dos porcentajes que no son el mismo</h2>
+      <div class="grid two">
+        <article class="card">
+          <p class="kicker">Unidades (el digest)</p>
+          <p class="xl danger">10.69%</p>
+          <p class="sm muted mt">sum(rejected) / sum(inspected). Scrap. Apparel sano: 2–5%. ~3,902 impresiones/día al ritmo actual.</p>
+        </article>
+        <article class="card">
+          <p class="kicker">Inspecciones (MOS /stats)</p>
+          <p class="xl muted">pass_rate</p>
+          <p class="sm muted mt">PASS records / total records. Un FAIL de 2,000 piezas y un PASS de 10 pesan igual. No lo uses como calidad de planta.</p>
+        </article>
+      </div>
+      <p class="sm mt">First-pass = 100 − 10.69 = 89.31%. Eso sí es calidad.</p>
+    </section>
+
+    <section>
+      <p class="kicker">Auditoría</p>
+      <h2>Cómo empatar el post con MOS mañana</h2>
+      <div class="list">
+        <article class="card row"><span class="n">1</span><div><p><strong>Producido hoy</strong></p><p class="sm muted">MOS → Producción → preset Hoy. total_produced debe empatar (impresiones, Tijuana).</p></div></article>
+        <article class="card row"><span class="n">2</span><div><p><strong>Ritmo 7 días</strong></p><p class="sm muted">MOS → Producción → preset Semana. total_produced ≈ 182,517 el 27 ago. by_day[] es la serie que el digest no publica.</p></div></article>
+        <article class="card row"><span class="n">3</span><div><p><strong>En máquina / listo / blancos</strong></p><p class="sm muted">Tableros MAQUINA*, READY TO SCHEDULED, BLANKS · o /api/capacity-plan. Suma quantity (o remaining) vs el renglón del post.</p></div></article>
+        <article class="card row"><span class="n">4</span><div><p><strong>Vencen / atrasadas</strong></p><p class="sm muted">Órdenes por due date, excluir COMPLETOS y PAPELERA. Unidades, no conteo de tarjetas.</p></div></article>
+        <article class="card row"><span class="n">5</span><div><p><strong>Rechazo</strong></p><p class="sm muted">QC records, últimos 7 días. sum(rejected) / sum(inspected). No uses pass_rate de /stats.</p></div></article>
+      </div>
+    </section>
+
+    <section>
+      <p class="kicker">Límites</p>
+      <h2>Lo que este briefing no ve</h2>
+      <div class="list">
+        <article class="card"><p><strong>El digest no es MOS en vivo</strong></p><p class="sm muted mt">El post de las 7:30 es un corte. Esta página sigue el corte, no el websocket.</p></article>
+        <article class="card"><p><strong>Caché de 5 minutos</strong></p><p class="sm muted mt">production-summary, analytics y capacity-plan cachean 300 s. Una captura invalida el prefijo prod_.</p></article>
+        <article class="card"><p><strong>Neck no entra al digest</strong></p><p class="sm muted mt">neck_logs es otra colección (CORTE NECK). A propósito no se mezcla con production_logs, gantt ni reportes.</p></article>
+        <article class="card"><p><strong>El PDF por email es otro producto</strong></p><p class="sm muted mt">MOS tiene un scheduler (APScheduler, default 19:00 Tijuana, arranca DISABLED) que manda PDF por Resend. No publica a Rocket.Chat.</p></article>
+        <article class="card"><p><strong>Blancos ≠ inventario WMS</strong></p><p class="sm muted mt">El tablero BLANKS es cola de órdenes. No es on-hand en anaquel.</p></article>
+      </div>
+    </section>
+
+    <footer>
+      <p>Fuente de código: MOS FastAPI miguelmiranda-eng/mos-system — production.py, qc.py, orders, report_scheduler.py. Corte de ejemplo: digest #Production jueves 27 ago 2026. Este informe no sustituye MOS; explica el puente.</p>
+      <p class="mt"><a href="/">Volver al briefing →</a></p>
+    </footer>
+  </div>
+</body>
+</html>
