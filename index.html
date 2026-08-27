@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Prosper Producción — jueves 27 ago</title>
+  <meta name="description" content="Briefing diario MOS: impresiones, blancos, first-pass vs rechazo." />
+  <meta name="theme-color" content="#0c0d0f" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0c0d0f;
+      --surface: #14161a;
+      --raised: #1b1e24;
+      --fg: #eceae4;
+      --muted: #8b8e96;
+      --subtle: #6b6e76;
+      --accent: #c8ccd4;
+      --danger: #c45c4a;
+      --warn: #c4a574;
+      --ok: #7a9a82;
+      --bar: #5c6573;
+      --grid: color-mix(in oklab, var(--fg) 8%, transparent);
+      --sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+      --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--sans); }
+    body { -webkit-font-smoothing: antialiased; }
+    a { color: inherit; }
+    .wrap { max-width: 72rem; margin: 0 auto; padding: 1.25rem 1rem 3rem; }
+    header { border-bottom: 1px solid color-mix(in oklab, var(--fg) 12%, transparent); }
+    header .wrap { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: space-between; align-items: end; padding-bottom: 1.25rem; }
+    .kicker { font-size: 0.75rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0; }
+    h1 { font-size: clamp(1.5rem, 2vw + 1rem, 1.875rem); font-weight: 500; letter-spacing: -0.03em; margin: 0.25rem 0 0; }
+    h2 { font-size: 1.25rem; font-weight: 500; letter-spacing: -0.02em; margin: 0.25rem 0 0; }
+    .lede { max-width: 28rem; font-size: 0.875rem; line-height: 1.5; color: var(--muted); margin: 0; }
+    .stack { display: flex; flex-direction: column; gap: 1.25rem; }
+    .card { background: var(--surface); border-radius: 24px; padding: 1.25rem; box-shadow: 0 0 0 1px color-mix(in oklab, var(--fg) 10%, transparent); }
+    .inner { background: var(--raised); border-radius: 12px; padding: 1rem; }
+    .hero { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 1rem; align-items: end; }
+    .num { font-family: var(--mono); font-variant-numeric: tabular-nums; font-weight: 500; }
+    .xl { font-size: clamp(2.25rem, 4vw, 3rem); letter-spacing: -0.03em; margin: 0.25rem 0 0; }
+    .right { text-align: right; }
+    .danger { color: var(--danger); }
+    .warn { color: var(--warn); }
+    .ok { color: var(--ok); }
+    .muted { color: var(--muted); }
+    .subtle { color: var(--subtle); }
+    .sm { font-size: 0.875rem; line-height: 1.5; }
+    .xs { font-size: 0.75rem; line-height: 1.5; }
+    .chart { display: grid; grid-template-columns: repeat(14, minmax(0, 1fr)); gap: 6px; align-items: end; height: 16rem; margin-top: 1.25rem; }
+    .col { display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: end; gap: 6px; }
+    .bar { width: 100%; max-width: 28px; border-radius: 4px 4px 0 0; background: var(--bar); min-height: 2px; }
+    .bar.today { background: var(--accent); }
+    .bar.wk { background: var(--grid); }
+    .pace-line { position: relative; }
+    .legend { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 0.75rem; }
+    .dot { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
+    .grid2 { display: grid; gap: 0.75rem; }
+    .grid4 { display: grid; gap: 0.75rem; }
+    .split { display: grid; gap: 0.75rem; grid-template-columns: 1fr 1fr; }
+    .pipe { display: grid; gap: 0.75rem; }
+    .meter { height: 6px; background: var(--bg); border-radius: 999px; overflow: hidden; margin-top: 0.75rem; }
+    .meter > span { display: block; height: 100%; border-radius: 999px; }
+    ol.actions { margin: 1.25rem 0 0; padding: 0; list-style: none; }
+    ol.actions li { display: flex; gap: 0.75rem; font-size: 0.875rem; line-height: 1.5; margin-bottom: 0.5rem; }
+    ol.actions span { font-family: var(--mono); font-size: 0.75rem; color: var(--muted); margin-top: 0.15rem; }
+    p { margin: 0; }
+    .mt { margin-top: 0.75rem; }
+    .mt2 { margin-top: 1rem; }
+    .row { display: flex; justify-content: space-between; gap: 0.75rem; align-items: start; }
+    footer { font-size: 0.75rem; line-height: 1.5; color: var(--muted); }
+    @media (min-width: 640px) {
+      .wrap { padding-left: 1.5rem; padding-right: 1.5rem; }
+      .grid2 { grid-template-columns: 1fr 1fr; }
+      .pipe { grid-template-columns: repeat(4, 1fr); }
+      .chart { height: 20rem; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <div>
+        <p class="kicker">Prosper · MOS · #Production</p>
+        <h1>Producción jueves 27 ago</h1>
+      </div>
+      <p class="lede">Briefing del corte MOS. Primary: impresiones/día. El cuello es blancos, no prensas. Calidad = first-pass, no el % de rechazo.</p>
+    </div>
+  </header>
+  <div class="wrap stack">
+    <section class="card">
+      <div class="hero">
+        <div>
+          <p class="kicker">Impreso hoy (hasta ahora)</p>
+          <p class="num xl">19,742</p>
+          <p class="sm muted mt">12 máquinas · 1,645 c/u · first-pass estimado 17,632</p>
+        </div>
+        <div class="right">
+          <p class="sm danger">54% del ritmo · Por debajo del ritmo</p>
+          <p class="sm muted num mt">Ritmo 36,503/día</p>
+          <p class="sm muted">Faltan 16,761 para empatar</p>
+        </div>
+      </div>
+      <div class="row mt2">
+        <h2>Impresiones por día</h2>
+        <p class="xs muted">14 días calendario</p>
+      </div>
+      <div class="chart" aria-label="Impresiones diarias">
+        <div class="col"><div class="bar" style="height:100%"></div><span class="xs muted">14</span></div>
+        <div class="col"><div class="bar wk" style="height:2%"></div><span class="xs muted">15</span></div>
+        <div class="col"><div class="bar wk" style="height:2%"></div><span class="xs muted">16</span></div>
+        <div class="col"><div class="bar" style="height:100%"></div><span class="xs muted">17</span></div>
+        <div class="col"><div class="bar" style="height:100%"></div><span class="xs muted">18</span></div>
+        <div class="col"><div class="bar" style="height:100%"></div><span class="xs muted">19</span></div>
+        <div class="col"><div class="bar" style="height:100%"></div><span class="xs muted">20</span></div>
+        <div class="col"><div class="bar" style="height:100%"></div><span class="xs muted">21</span></div>
+        <div class="col"><div class="bar wk" style="height:2%"></div><span class="xs muted">22</span></div>
+        <div class="col"><div class="bar wk" style="height:2%"></div><span class="xs muted">23</span></div>
+        <div class="col"><div class="bar" style="height:100%"></div><span class="xs muted">24</span></div>
+        <div class="col"><div class="bar" style="height:100%"></div><span class="xs muted">25</span></div>
+        <div class="col"><div class="bar" style="height:100%"></div><span class="xs muted">26</span></div>
+        <div class="col"><div class="bar today" style="height:54%"></div><span class="xs muted">27</span></div>
+      </div>
+      <div class="legend xs muted">
+        <span><i class="dot" style="background:var(--accent)"></i> Hoy</span>
+        <span><i class="dot" style="background:var(--bar)"></i> Ritmo 7 días (MOS no manda serie diaria)</span>
+        <span><i class="dot" style="background:var(--grid)"></i> Fin de semana</span>
+      </div>
+      <p class="xs muted mt">MOS publica un total de 7 días (182,517), no una serie por día. Días de planta sin digest pegado se dibujan a 36,503. Fines de semana en cero. Línea de pace = 36,503.</p>
+    </section>
+
+    <section class="card">
+      <p class="kicker">Flujo de planta</p>
+      <h2>De blancos a impreso</h2>
+      <p class="sm muted mt">El trabajo se mueve izquierda a derecha. El cuello es el primer escalón: tela que no ha llegado.</p>
+      <div class="pipe mt2">
+        <div class="inner">
+          <p class="kicker">01 · Esperando blancos</p>
+          <p class="num xl danger" style="font-size:1.5rem">343,102</p>
+          <p class="xs muted">191 órdenes</p>
+          <div class="meter"><span class="danger" style="width:100%;background:var(--danger)"></span></div>
+          <p class="xs muted mt">9.4 días parados — constraint</p>
+        </div>
+        <div class="inner">
+          <p class="kicker">02 · Listo para programar</p>
+          <p class="num xl warn" style="font-size:1.5rem">13,083</p>
+          <p class="xs muted">10 trabajos</p>
+          <div class="meter"><span style="width:8%;background:var(--warn)"></span></div>
+          <p class="xs muted mt">Cola corta para rellenar prensas</p>
+        </div>
+        <div class="inner">
+          <p class="kicker">03 · En máquina</p>
+          <p class="num xl" style="font-size:1.5rem">39,905</p>
+          <p class="xs muted">5 trabajos</p>
+          <div class="meter"><span style="width:12%;background:var(--accent)"></span></div>
+          <p class="xs muted mt">~10.9 h de alimento</p>
+        </div>
+        <div class="inner">
+          <p class="kicker">04 · Impreso hoy</p>
+          <p class="num xl warn" style="font-size:1.5rem">19,742</p>
+          <p class="xs muted">12 máquinas</p>
+          <div class="meter"><span style="width:6%;background:var(--warn)"></span></div>
+          <p class="xs muted mt">54% del ritmo 7 días</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid2">
+      <article class="card">
+        <p class="kicker">Calidad vs rechazo</p>
+        <h2>No son la misma cifra</h2>
+        <div class="split mt2">
+          <div class="inner">
+            <p class="kicker">First-pass</p>
+            <p class="num xl ok" style="font-size:1.875rem">89.31%</p>
+            <p class="xs muted mt">Unidades que sí pasan. Esto es calidad. 100 − rechazo.</p>
+          </div>
+          <div class="inner">
+            <p class="kicker">Rechazo QC</p>
+            <p class="num xl danger" style="font-size:1.875rem">10.69%</p>
+            <p class="xs muted mt">Scrap. ~3,902 impresiones/día quemadas.</p>
+          </div>
+        </div>
+        <p class="sm mt2">MOS QC guarda quantity_inspected y quantity_rejected. No hay un “score de calidad”. El digest de las 7:30 titulaba la sección Calidad y pegaba el rechazo — por eso 10.69% se leía al revés. Apparel sano: 2–5% rechazo (95–98% first-pass). 10.69% es más de una máquina completa perdida cada día.</p>
+      </article>
+      <article class="card">
+        <p class="kicker">Lectura</p>
+        <h2>Debajo del ritmo de 7 días. El cuello no son las máquinas: son los blancos.</h2>
+        <p class="sm mt2">Hoy van 19,742 impresiones en 12 máquinas (1,645 c/u). El ritmo publicado de 7 días es 36,503/día (182,517 en cinco días de planta). Faltan 16,761 para empatar ese promedio.</p>
+        <p class="sm mt">En prensa hay 39,905 unidades (5 trabajos): ~10.9 h al ritmo actual. Listo para programar está delgado: 13,083 (10 trabajos). Las 12 máquinas no están ociosas por falta de prensa; están cortas de trabajo que sí se puede imprimir.</p>
+        <p class="sm mt">Bloqueo principal: 343,102 unidades en 191 órdenes esperando blancos. Eso es 9.4 días de producción parada. Lo que vence hoy (73,870 en 36 órdenes) es 2.0 días de trabajo — no cabe en el turno — más 181,139 ya atrasadas (5.0 días).</p>
+        <p class="sm mt">Calidad no es el rechazo. First-pass es 89.31%. Rechazo QC es 10.69% de unidades inspeccionadas en 7 días.</p>
+        <ol class="actions">
+          <li><span>1</span> Liberar blancos primero para las 36 órdenes que vencen hoy — no para las 191 del board de blancos.</li>
+          <li><span>2</span> No meter más trabajos a las 12 máquinas hasta que WMS suelte tela para lo que ya vence.</li>
+          <li><span>3</span> QC: tratar el 10.69% de rechazo como parar-y-encontrar. Un punto más ≈ 365 impresiones perdidas/día.</li>
+        </ol>
+      </article>
+    </section>
+
+    <section class="card">
+      <p class="kicker">Cada cifra, explicada</p>
+      <h2>De dónde sale el digest</h2>
+      <p class="sm muted mt">El bot de las 7:30 publica estos renglones desde MOS. Abajo: qué cuenta, de qué tablero o log, y cómo leerlo hoy.</p>
+      <div class="grid2 mt2">
+        <div class="inner">
+          <div class="row"><p class="kicker">Producido hoy</p><p class="num sm">19,742</p></div>
+          <p class="xs muted">12 máquinas · 1,645 c/u</p>
+          <p class="sm mt">Impresiones en production_logs desde medianoche America/Tijuana hasta el corte. No es el cierre de turno; es “hasta ahora”.</p>
+          <p class="xs subtle mt">MOS production_logs · corte del día</p>
+        </div>
+        <div class="inner">
+          <div class="row"><p class="kicker">Ritmo 7 días</p><p class="num sm">36,503/día</p></div>
+          <p class="xs muted">182,517 en 7 días</p>
+          <p class="sm mt">Suma de impresiones de 7 días, dividida entre días de planta. Único ritmo oficial. MOS no manda serie día-por-día — las barras grises se dibujan a este promedio.</p>
+          <p class="xs subtle mt">MOS production_logs · ventana 7 días</p>
+        </div>
+        <div class="inner">
+          <div class="row"><p class="kicker">En máquina ahora</p><p class="num sm">39,905</p></div>
+          <p class="xs muted">5 trabajos · ~10.9 h</p>
+          <p class="sm mt">Unidades en tableros MAQUINA*. Trabajo que las prensas ya pueden correr. Si está bajo frente al ritmo, las máquinas se quedan cortas antes de que WMS suelte tela.</p>
+          <p class="xs subtle mt">MOS boards MAQUINA*</p>
+        </div>
+        <div class="inner">
+          <div class="row"><p class="kicker">Listo para programar</p><p class="num sm">13,083</p></div>
+          <p class="xs muted">10 trabajos</p>
+          <p class="sm mt">Órdenes en READY TO SCHEDULED: arte y BOM listos, aún no cargadas a máquina. Cola corta = no hay con qué rellenar cuando una prensa termina.</p>
+          <p class="xs subtle mt">MOS board READY TO SCHEDULED</p>
+        </div>
+        <div class="inner">
+          <div class="row"><p class="kicker">Vencen hoy</p><p class="num sm warn">73,870</p></div>
+          <p class="xs muted">36 órdenes · 2.0 días de trabajo</p>
+          <p class="sm mt">Unidades cuya fecha de vencimiento es hoy. A ritmo actual no caben en el turno. Hay que elegir cuáles de las 36 se imprimen.</p>
+          <p class="xs subtle mt">MOS órdenes · due date = hoy</p>
+        </div>
+        <div class="inner">
+          <div class="row"><p class="kicker">Ya atrasadas</p><p class="num sm danger">181,139</p></div>
+          <p class="xs muted">5.0 días al ritmo actual</p>
+          <p class="sm mt">Órdenes abiertas con due date anterior a hoy. O se priorizan sobre lo que vence hoy, o se re-prometen.</p>
+          <p class="xs subtle mt">MOS órdenes · due date < hoy</p>
+        </div>
+        <div class="inner">
+          <div class="row"><p class="kicker">Vencen en 7 días</p><p class="num sm">107,770</p></div>
+          <p class="xs muted">40 órdenes</p>
+          <p class="sm mt">Demanda, no capacidad. Si blancos no se mueven, esta cifra se convierte en “atrasadas” el lunes siguiente.</p>
+          <p class="xs subtle mt">MOS órdenes · due date próximos 7 días</p>
+        </div>
+        <div class="inner">
+          <div class="row"><p class="kicker">Esperando blancos</p><p class="num sm danger">343,102</p></div>
+          <p class="xs muted">191 órdenes · 9.4 días parados</p>
+          <p class="sm mt">Board BLANKS: no hay tela/garment. Este es el constraint. Priorizar las 36 que vencen hoy, no las 191 del board.</p>
+          <p class="xs subtle mt">MOS board BLANKS</p>
+        </div>
+        <div class="inner">
+          <div class="row"><p class="kicker">First-pass (calidad)</p><p class="num sm warn">89.31%</p></div>
+          <p class="xs muted">Inverso del rechazo de unidades</p>
+          <p class="sm mt">Porcentaje de unidades inspeccionadas que no se rechazan. MOS no guarda un score de calidad; guarda quantity_inspected y quantity_rejected.</p>
+          <p class="xs subtle mt">MOS QC · 1 − (rechazadas / inspeccionadas)</p>
+        </div>
+        <div class="inner">
+          <div class="row"><p class="kicker">Rechazo QC (7 días)</p><p class="num sm danger">10.69%</p></div>
+          <p class="xs muted">~3,902 impresiones perdidas/día</p>
+          <p class="sm mt">quantity_rejected / quantity_inspected (unidades, no registros). Apparel sano: 2–5%. Distinto de pass_rate de MOS, que cuenta inspecciones PASS/FAIL, no piezas.</p>
+          <p class="xs subtle mt">MOS qc_records · 7 días</p>
+        </div>
+        <div class="inner">
+          <div class="row"><p class="kicker">Proyección al ritmo</p><p class="num sm">36,503</p></div>
+          <p class="xs muted">Si el resto del día corre al promedio 7 días</p>
+          <p class="sm mt">El digest MOS publica el ritmo de 7 días como proyección de cierre. No es un forecast de demanda. Empatar 36,503 exige 16,761 más antes de cierre.</p>
+          <p class="xs subtle mt">MOS digest · last7Daily como proxy</p>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      Corte 2026-08-27 13:18 PDT · fuente digest MOS vivo · no es el Command Center.
+    </footer>
+  </div>
+</body>
+</html>
