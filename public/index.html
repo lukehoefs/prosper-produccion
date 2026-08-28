@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Prosper Producción — jueves 27 ago</title>
+  <title>Prosper Producción</title>
   <meta name="description" content="Briefing diario MOS: impresiones, blancos, first-pass vs rechazo." />
   <meta name="theme-color" content="#0c0d0f" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -22,6 +22,7 @@
       --warn: #c4a574;
       --ok: #7a9a82;
       --bar: #5c6573;
+      --logged: #8b919c;
       --grid: color-mix(in oklab, var(--fg) 8%, transparent);
       --sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
       --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
@@ -66,6 +67,7 @@
     .col.wide { display: none; }
     .bar { width: 100%; max-width: 36px; border-radius: 4px 4px 0 0; background: var(--bar); min-height: 2px; }
     .bar.today { background: var(--accent); }
+    .bar.logged { background: var(--logged); }
     .bar.wk { background: var(--grid); }
     .legend { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.75rem; }
     .dot { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
@@ -107,11 +109,86 @@
   </style>
 </head>
 <body>
+  <div id="app"></div>
+  <script>
+    const FALLBACK = {"date":"2026-08-28","weekday":"viernes","titleDate":"viernes 28 ago","producedToday":26625,"machines":12,"last7Total":176359,"last7Daily":35272,"onMachineUnits":44670,"onMachineJobs":6,"readyUnits":3807,"readyJobs":4,"dueTodayUnits":0,"dueTodayOrders":0,"lateUnits":213189,"projection":35272,"next7Units":69630,"next7Orders":90,"blanksUnits":323576,"blanksOrders":183,"rejectPct":0.42,"capturedAt":"2026-08-28T06:30:01-07:00","source":"live-digest","byDay":[{"date":"2026-08-24","produced":36126},{"date":"2026-08-25","produced":36343},{"date":"2026-08-26","produced":32802},{"date":"2026-08-27","produced":50209}]};
+    const WD_SHORT = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
+
+    const fmt = (n) => Math.round(n).toLocaleString("en-US");
+    const pct = (n) => n.toFixed(2);
+    const days = (n, pace) => (pace ? n / pace : 0).toFixed(1);
+    const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+
+    function brief(s) {
+      const gap = Math.max(0, s.last7Daily - s.producedToday);
+      const pacePct = s.last7Daily ? (s.producedToday / s.last7Daily) * 100 : 0;
+      const per = s.machines ? s.producedToday / s.machines : 0;
+      const firstPass = 100 - s.rejectPct;
+      const blanksDays = s.last7Daily ? s.blanksUnits / s.last7Daily : 0;
+      const dueDays = s.last7Daily ? s.dueTodayUnits / s.last7Daily : 0;
+      const lateDays = s.last7Daily ? s.lateUnits / s.last7Daily : 0;
+      const feedHours = s.last7Daily ? s.onMachineUnits / (s.last7Daily / 10) : 0;
+      const rejectLoss = s.last7Daily * (s.rejectPct / 100);
+      const condition = pacePct >= 95 ? "ahead" : pacePct >= 70 ? "on-pace" : "behind";
+      const headline = condition === "behind"
+        ? "Debajo del ritmo de 7 días. El cuello no son las máquinas: son los blancos."
+        : condition === "on-pace"
+          ? "Ritmo recuperable si WMS suelta tela para lo que ya está atrasado."
+          : "Al ritmo de 7 días o por encima.";
+      const a1 = s.dueTodayOrders > 0
+        ? `Liberar blancos primero para las ${s.dueTodayOrders} órdenes que vencen hoy — no para las ${s.blanksOrders} del board de blancos.`
+        : `Hoy no vence nada nuevo. Blancos primero para las atrasadas (${fmt(s.lateUnits)}).`;
+      const a2 = s.readyUnits < s.last7Daily * 0.5
+        ? `Cola lista delgada (${fmt(s.readyUnits)}). No cargar de más a las ${s.machines} máquinas.`
+        : `Programar desde listo (${fmt(s.readyUnits)}) sin inflar máquina.`;
+      const a3 = s.rejectPct >= 5
+        ? `QC: tratar el ${pct(s.rejectPct)}% de rechazo como parar-y-encontrar. Un punto más ≈ ${fmt(s.last7Daily * 0.01)} impresiones/día.`
+        : `QC en ${pct(s.rejectPct)}% — rango sano (apparel 2–5%). No aflojar first-pass.`;
+      return { gap, pacePct, per, firstPass, blanksDays, dueDays, lateDays, feedHours, rejectLoss, condition, headline, a1, a2, a3 };
+    }
+
+    function bars(s) {
+      const logged = Object.fromEntries((s.byDay || []).map((d) => [d.date, d.produced]));
+      const end = new Date(s.date + "T12:00:00");
+      const out = [];
+      for (let i = 13; i >= 0; i--) {
+        const dt = new Date(end);
+        dt.setDate(end.getDate() - i);
+        const iso = dt.toISOString().slice(0, 10);
+        const dow = dt.getDay();
+        const isToday = iso === s.date;
+        const isWeekend = dow === 0 || dow === 6;
+        let impressions = 0, kind = "pace";
+        if (isToday) { impressions = s.producedToday; kind = "today"; }
+        else if (logged[iso] != null) { impressions = logged[iso]; kind = "logged"; }
+        else if (isWeekend) { impressions = 0; kind = "weekend"; }
+        else { impressions = s.last7Daily; kind = "pace"; }
+        out.push({ iso, label: String(dt.getDate()), weekday: WD_SHORT[dow], impressions, kind, wide: i >= 7 });
+      }
+      return out;
+    }
+
+    function render(s) {
+      const b = brief(s);
+      const chart = bars(s);
+      const max = Math.max(s.last7Daily, ...chart.map((c) => c.impressions), 1);
+      const tone = b.condition === "behind" ? "danger" : b.condition === "ahead" ? "ok" : "warn";
+      const condLabel = b.condition === "behind" ? "Por debajo del ritmo" : b.condition === "ahead" ? "Al ritmo o por encima" : "Ritmo recuperable";
+      const pipeMax = Math.max(s.blanksUnits, s.readyUnits, s.onMachineUnits, s.producedToday, 1);
+      const qcCopy = s.rejectPct >= 5
+        ? `MOS QC guarda quantity_inspected y quantity_rejected. El digest viejo titulaba Calidad y pegaba el rechazo — por eso ${pct(s.rejectPct)}% se leía al revés. Apparel sano: 2–5% rechazo. ${pct(s.rejectPct)}% quema ~${fmt(b.rejectLoss)} impresiones/día.`
+        : `First-pass es ${pct(b.firstPass)}%. Rechazo QC de 7 días está en ${pct(s.rejectPct)}%, dentro del rango sano de apparel (2–5%). Seguir midiendo unidades, no pass_rate de inspecciones.`;
+      const dueNote = s.dueTodayOrders > 0
+        ? `Lo que vence hoy (${fmt(s.dueTodayUnits)} en ${s.dueTodayOrders} órdenes) es ${days(s.dueTodayUnits, s.last7Daily)} días de trabajo — no cabe en el turno — más ${fmt(s.lateUnits)} ya atrasadas (${days(s.lateUnits, s.last7Daily)} días).`
+        : `Hoy no hay vencimientos nuevos. El lastre son ${fmt(s.lateUnits)} ya atrasadas (${days(s.lateUnits, s.last7Daily)} días al ritmo actual).`;
+      document.title = "Prosper Producción — " + s.titleDate;
+      const captured = (s.capturedAt || "").replace("T", " ").replace("-07:00", " PDT").replace("-08:00", " PST");
+      document.getElementById("app").innerHTML = `
   <header>
     <div class="wrap">
       <div>
         <p class="kicker">Prosper · MOS · #Production</p>
-        <h1>Producción jueves 27 ago</h1>
+        <h1>Producción ${esc(s.titleDate)}</h1>
         <p class="sm mt"><a href="/fuentes.html">De dónde sale cada cifra</a></p>
       </div>
       <p class="lede">Briefing del corte MOS. Primary: impresiones/día. El cuello es blancos, no prensas. Calidad = first-pass, no el % de rechazo.</p>
@@ -122,13 +199,13 @@
       <div class="hero">
         <div>
           <p class="kicker">Impreso hoy (hasta ahora)</p>
-          <p class="num xl">19,742</p>
-          <p class="sm muted mt">12 máquinas · 1,645 c/u · first-pass estimado 17,632</p>
+          <p class="num xl">${fmt(s.producedToday)}</p>
+          <p class="sm muted mt">${s.machines} máquinas · ${fmt(b.per)} c/u · first-pass estimado ${fmt(s.producedToday * b.firstPass / 100)}</p>
         </div>
         <div class="right">
-          <p class="sm danger">54% del ritmo · Por debajo del ritmo</p>
-          <p class="sm muted num mt">Ritmo 36,503/día</p>
-          <p class="sm muted">Faltan 16,761 para empatar</p>
+          <p class="sm ${tone}">${b.pacePct.toFixed(0)}% del ritmo · ${condLabel}</p>
+          <p class="sm muted num mt">Ritmo ${fmt(s.last7Daily)}/día</p>
+          <p class="sm muted">Faltan ${fmt(b.gap)} para empatar</p>
         </div>
       </div>
       <div class="row mt2">
@@ -136,29 +213,20 @@
         <p class="xs muted">7 días · 14 en pantalla ancha</p>
       </div>
       <div class="chart" aria-label="Impresiones diarias">
-        <div class="col wide"><div class="bar" style="height:100%"></div><span class="xs muted">14</span></div>
-        <div class="col wide"><div class="bar wk" style="height:2%"></div><span class="xs muted">15</span></div>
-        <div class="col wide"><div class="bar wk" style="height:2%"></div><span class="xs muted">16</span></div>
-        <div class="col wide"><div class="bar" style="height:100%"></div><span class="xs muted">17</span></div>
-        <div class="col wide"><div class="bar" style="height:100%"></div><span class="xs muted">18</span></div>
-        <div class="col wide"><div class="bar" style="height:100%"></div><span class="xs muted">19</span></div>
-        <div class="col wide"><div class="bar" style="height:100%"></div><span class="xs muted">20</span></div>
-        <div class="col"><div class="bar" style="height:100%"></div><span class="xs muted"><span class="wd">Vie</span><span class="dn">21</span></span></div>
-        <div class="col"><div class="bar wk" style="height:2%"></div><span class="xs muted"><span class="wd">Sáb</span><span class="dn">22</span></span></div>
-        <div class="col"><div class="bar wk" style="height:2%"></div><span class="xs muted"><span class="wd">Dom</span><span class="dn">23</span></span></div>
-        <div class="col"><div class="bar" style="height:100%"></div><span class="xs muted"><span class="wd">Lun</span><span class="dn">24</span></span></div>
-        <div class="col"><div class="bar" style="height:100%"></div><span class="xs muted"><span class="wd">Mar</span><span class="dn">25</span></span></div>
-        <div class="col"><div class="bar" style="height:100%"></div><span class="xs muted"><span class="wd">Mié</span><span class="dn">26</span></span></div>
-        <div class="col"><div class="bar today" style="height:54%"></div><span class="xs muted"><span class="wd">Hoy</span><span class="dn">27</span></span></div>
+        ${chart.map((c) => {
+          const h = c.kind === "weekend" || c.impressions === 0 ? 2 : Math.max(4, Math.round((c.impressions / max) * 100));
+          const cls = c.kind === "today" ? "today" : c.kind === "weekend" ? "wk" : c.kind === "logged" ? "logged" : "";
+          return `<div class="col${c.wide ? " wide" : ""}"><div class="bar ${cls}" style="height:${h}%"></div><span class="xs muted"><span class="wd">${c.wide ? c.label : c.weekday}</span><span class="dn">${c.label}</span></span></div>`;
+        }).join("")}
       </div>
       <div class="legend xs muted">
-        <span><i class="dot" style="background:var(--accent)"></i> Hoy</span>
-        <span><i class="dot" style="background:var(--bar)"></i> Ritmo 7 días (MOS no manda serie diaria)</span>
+        <span><i class="dot" style="background:var(--accent)"></i> Hoy (corte 7:30)</span>
+        <span><i class="dot" style="background:var(--logged)"></i> Día cerrado MOS</span>
+        <span><i class="dot" style="background:var(--bar)"></i> Ritmo 7 días</span>
         <span><i class="dot" style="background:var(--grid)"></i> Fin de semana</span>
       </div>
-      <p class="xs muted mt">MOS publica un total de 7 días (182,517), no una serie por día. Días de planta sin digest pegado se dibujan a 36,503. Fines de semana en cero. Línea de pace = 36,503.</p>
+      <p class="xs muted mt">El corte de las 7:30 publica el total de 7 días (${fmt(s.last7Total)}). Las barras de días cerrados vienen de MOS by_day. Hoy es el corte, no el cierre de turno.</p>
     </section>
-
     <section class="card">
       <p class="kicker">Flujo de planta</p>
       <h2>De blancos a impreso</h2>
@@ -166,35 +234,34 @@
       <div class="pipe mt2">
         <div class="inner">
           <p class="kicker">01 · Esperando blancos</p>
-          <p class="num xl danger" style="font-size:1.5rem">343,102</p>
-          <p class="xs muted">191 órdenes</p>
-          <div class="meter"><span class="danger" style="width:100%;background:var(--danger)"></span></div>
-          <p class="xs muted mt">9.4 días parados — constraint</p>
+          <p class="num xl danger" style="font-size:1.5rem">${fmt(s.blanksUnits)}</p>
+          <p class="xs muted">${s.blanksOrders} órdenes</p>
+          <div class="meter"><span style="width:100%;background:var(--danger)"></span></div>
+          <p class="xs muted mt">${days(s.blanksUnits, s.last7Daily)} días parados — constraint</p>
         </div>
         <div class="inner">
           <p class="kicker">02 · Listo para programar</p>
-          <p class="num xl warn" style="font-size:1.5rem">13,083</p>
-          <p class="xs muted">10 trabajos</p>
-          <div class="meter"><span style="width:8%;background:var(--warn)"></span></div>
+          <p class="num xl warn" style="font-size:1.5rem">${fmt(s.readyUnits)}</p>
+          <p class="xs muted">${s.readyJobs} trabajos</p>
+          <div class="meter"><span style="width:${Math.max(4, Math.round(s.readyUnits / pipeMax * 100))}%;background:var(--warn)"></span></div>
           <p class="xs muted mt">Cola corta para rellenar prensas</p>
         </div>
         <div class="inner">
           <p class="kicker">03 · En máquina</p>
-          <p class="num xl" style="font-size:1.5rem">39,905</p>
-          <p class="xs muted">5 trabajos</p>
-          <div class="meter"><span style="width:12%;background:var(--accent)"></span></div>
-          <p class="xs muted mt">~10.9 h de alimento</p>
+          <p class="num xl" style="font-size:1.5rem">${fmt(s.onMachineUnits)}</p>
+          <p class="xs muted">${s.onMachineJobs} trabajos</p>
+          <div class="meter"><span style="width:${Math.max(4, Math.round(s.onMachineUnits / pipeMax * 100))}%;background:var(--accent)"></span></div>
+          <p class="xs muted mt">~${b.feedHours.toFixed(1)} h de alimento</p>
         </div>
         <div class="inner">
           <p class="kicker">04 · Impreso hoy</p>
-          <p class="num xl warn" style="font-size:1.5rem">19,742</p>
-          <p class="xs muted">12 máquinas</p>
-          <div class="meter"><span style="width:6%;background:var(--warn)"></span></div>
-          <p class="xs muted mt">54% del ritmo 7 días</p>
+          <p class="num xl ${tone}" style="font-size:1.5rem">${fmt(s.producedToday)}</p>
+          <p class="xs muted">${s.machines} máquinas</p>
+          <div class="meter"><span style="width:${Math.max(4, Math.round(s.producedToday / pipeMax * 100))}%;background:var(--${tone === "ok" ? "ok" : "warn"})"></span></div>
+          <p class="xs muted mt">${b.pacePct.toFixed(0)}% del ritmo 7 días</p>
         </div>
       </div>
     </section>
-
     <section class="grid2">
       <article class="card">
         <p class="kicker">Calidad vs rechazo</p>
@@ -202,109 +269,67 @@
         <div class="split mt2">
           <div class="inner">
             <p class="kicker">First-pass</p>
-            <p class="num xl ok">89.31%</p>
+            <p class="num xl ok">${pct(b.firstPass)}%</p>
             <p class="xs muted mt">Unidades que sí pasan. Esto es calidad. 100 − rechazo.</p>
           </div>
           <div class="inner">
             <p class="kicker">Rechazo QC</p>
-            <p class="num xl danger">10.69%</p>
-            <p class="xs muted mt">Scrap. ~3,902 impresiones/día quemadas.</p>
+            <p class="num xl ${s.rejectPct >= 5 ? "danger" : "ok"}">${pct(s.rejectPct)}%</p>
+            <p class="xs muted mt">Scrap. ~${fmt(b.rejectLoss)} impresiones/día.</p>
           </div>
         </div>
-        <p class="sm mt2">MOS QC guarda quantity_inspected y quantity_rejected. No hay un “score de calidad”. El digest de las 7:30 titulaba la sección Calidad y pegaba el rechazo — por eso 10.69% se leía al revés. Apparel sano: 2–5% rechazo (95–98% first-pass). 10.69% es más de una máquina completa perdida cada día.</p>
+        <p class="sm mt2">${qcCopy}</p>
       </article>
       <article class="card">
         <p class="kicker">Lectura</p>
-        <h2>Debajo del ritmo de 7 días. El cuello no son las máquinas: son los blancos.</h2>
-        <p class="sm mt2">Hoy van 19,742 impresiones en 12 máquinas (1,645 c/u). El ritmo publicado de 7 días es 36,503/día (182,517 en cinco días de planta). Faltan 16,761 para empatar ese promedio.</p>
-        <p class="sm mt">En prensa hay 39,905 unidades (5 trabajos): ~10.9 h al ritmo actual. Listo para programar está delgado: 13,083 (10 trabajos). Las 12 máquinas no están ociosas por falta de prensa; están cortas de trabajo que sí se puede imprimir.</p>
-        <p class="sm mt">Bloqueo principal: 343,102 unidades en 191 órdenes esperando blancos. Eso es 9.4 días de producción parada. Lo que vence hoy (73,870 en 36 órdenes) es 2.0 días de trabajo — no cabe en el turno — más 181,139 ya atrasadas (5.0 días).</p>
-        <p class="sm mt">Calidad no es el rechazo. First-pass es 89.31%. Rechazo QC es 10.69% de unidades inspeccionadas en 7 días.</p>
+        <h2>${esc(b.headline)}</h2>
+        <p class="sm mt2">Hoy van ${fmt(s.producedToday)} impresiones en ${s.machines} máquinas (${fmt(b.per)} c/u). El ritmo publicado de 7 días es ${fmt(s.last7Daily)}/día (${fmt(s.last7Total)}). Faltan ${fmt(b.gap)} para empatar ese promedio.</p>
+        <p class="sm mt">En prensa hay ${fmt(s.onMachineUnits)} unidades (${s.onMachineJobs} trabajos): ~${b.feedHours.toFixed(1)} h al ritmo actual. Listo para programar está delgado: ${fmt(s.readyUnits)} (${s.readyJobs} trabajos).</p>
+        <p class="sm mt">Bloqueo principal: ${fmt(s.blanksUnits)} unidades en ${s.blanksOrders} órdenes esperando blancos. Eso es ${days(s.blanksUnits, s.last7Daily)} días de producción parada. ${dueNote}</p>
+        <p class="sm mt">Calidad no es el rechazo. First-pass es ${pct(b.firstPass)}%. Rechazo QC es ${pct(s.rejectPct)}% de unidades inspeccionadas en 7 días.</p>
         <ol class="actions">
-          <li><span>1</span> Liberar blancos primero para las 36 órdenes que vencen hoy — no para las 191 del board de blancos.</li>
-          <li><span>2</span> No meter más trabajos a las 12 máquinas hasta que WMS suelte tela para lo que ya vence.</li>
-          <li><span>3</span> QC: tratar el 10.69% de rechazo como parar-y-encontrar. Un punto más ≈ 365 impresiones perdidas/día.</li>
+          <li><span>1</span> ${esc(b.a1)}</li>
+          <li><span>2</span> ${esc(b.a2)}</li>
+          <li><span>3</span> ${esc(b.a3)}</li>
         </ol>
       </article>
     </section>
-
     <section class="card">
       <p class="kicker">Cada cifra, explicada</p>
       <h2>De dónde sale el digest</h2>
-      <p class="sm muted mt">El bot de las 7:30 publica estos renglones desde MOS. Abajo: qué cuenta, de qué tablero o log, y cómo leerlo hoy.</p>
+      <p class="sm muted mt">El corte de las 7:30 publica estos renglones desde MOS. Abajo: qué cuenta y cómo leerlo hoy.</p>
       <div class="grid2 mt2">
-        <div class="inner">
-          <div class="row"><p class="kicker">Producido hoy</p><p class="num sm">19,742</p></div>
-          <p class="xs muted">12 máquinas · 1,645 c/u</p>
-          <p class="sm mt">Impresiones en production_logs desde medianoche America/Tijuana hasta el corte. No es el cierre de turno; es “hasta ahora”.</p>
-          <p class="xs subtle mt">MOS production_logs · corte del día</p>
-        </div>
-        <div class="inner">
-          <div class="row"><p class="kicker">Ritmo 7 días</p><p class="num sm">36,503/día</p></div>
-          <p class="xs muted">182,517 en 7 días</p>
-          <p class="sm mt">Suma de impresiones de 7 días, dividida entre días de planta. Único ritmo oficial. MOS no manda serie día-por-día — las barras grises se dibujan a este promedio.</p>
-          <p class="xs subtle mt">MOS production_logs · ventana 7 días</p>
-        </div>
-        <div class="inner">
-          <div class="row"><p class="kicker">En máquina ahora</p><p class="num sm">39,905</p></div>
-          <p class="xs muted">5 trabajos · ~10.9 h</p>
-          <p class="sm mt">Unidades en tableros MAQUINA*. Trabajo que las prensas ya pueden correr. Si está bajo frente al ritmo, las máquinas se quedan cortas antes de que WMS suelte tela.</p>
-          <p class="xs subtle mt">MOS boards MAQUINA*</p>
-        </div>
-        <div class="inner">
-          <div class="row"><p class="kicker">Listo para programar</p><p class="num sm">13,083</p></div>
-          <p class="xs muted">10 trabajos</p>
-          <p class="sm mt">Órdenes en READY TO SCHEDULED: arte y BOM listos, aún no cargadas a máquina. Cola corta = no hay con qué rellenar cuando una prensa termina.</p>
-          <p class="xs subtle mt">MOS board READY TO SCHEDULED</p>
-        </div>
-        <div class="inner">
-          <div class="row"><p class="kicker">Vencen hoy</p><p class="num sm warn">73,870</p></div>
-          <p class="xs muted">36 órdenes · 2.0 días de trabajo</p>
-          <p class="sm mt">Unidades cuya fecha de vencimiento es hoy. A ritmo actual no caben en el turno. Hay que elegir cuáles de las 36 se imprimen.</p>
-          <p class="xs subtle mt">MOS órdenes · due date = hoy</p>
-        </div>
-        <div class="inner">
-          <div class="row"><p class="kicker">Ya atrasadas</p><p class="num sm danger">181,139</p></div>
-          <p class="xs muted">5.0 días al ritmo actual</p>
-          <p class="sm mt">Órdenes abiertas con due date anterior a hoy. O se priorizan sobre lo que vence hoy, o se re-prometen.</p>
-          <p class="xs subtle mt">MOS órdenes · due date < hoy</p>
-        </div>
-        <div class="inner">
-          <div class="row"><p class="kicker">Vencen en 7 días</p><p class="num sm">107,770</p></div>
-          <p class="xs muted">40 órdenes</p>
-          <p class="sm mt">Demanda, no capacidad. Si blancos no se mueven, esta cifra se convierte en “atrasadas” el lunes siguiente.</p>
-          <p class="xs subtle mt">MOS órdenes · due date próximos 7 días</p>
-        </div>
-        <div class="inner">
-          <div class="row"><p class="kicker">Esperando blancos</p><p class="num sm danger">343,102</p></div>
-          <p class="xs muted">191 órdenes · 9.4 días parados</p>
-          <p class="sm mt">Board BLANKS: no hay tela/garment. Este es el constraint. Priorizar las 36 que vencen hoy, no las 191 del board.</p>
-          <p class="xs subtle mt">MOS board BLANKS</p>
-        </div>
-        <div class="inner">
-          <div class="row"><p class="kicker">First-pass (calidad)</p><p class="num sm warn">89.31%</p></div>
-          <p class="xs muted">Inverso del rechazo de unidades</p>
-          <p class="sm mt">Porcentaje de unidades inspeccionadas que no se rechazan. MOS no guarda un score de calidad; guarda quantity_inspected y quantity_rejected.</p>
-          <p class="xs subtle mt">MOS QC · 1 − (rechazadas / inspeccionadas)</p>
-        </div>
-        <div class="inner">
-          <div class="row"><p class="kicker">Rechazo QC (7 días)</p><p class="num sm danger">10.69%</p></div>
-          <p class="xs muted">~3,902 impresiones perdidas/día</p>
-          <p class="sm mt">quantity_rejected / quantity_inspected (unidades, no registros). Apparel sano: 2–5%. Distinto de pass_rate de MOS, que cuenta inspecciones PASS/FAIL, no piezas.</p>
-          <p class="xs subtle mt">MOS qc_records · 7 días</p>
-        </div>
-        <div class="inner">
-          <div class="row"><p class="kicker">Proyección al ritmo</p><p class="num sm">36,503</p></div>
-          <p class="xs muted">Si el resto del día corre al promedio 7 días</p>
-          <p class="sm mt">El digest MOS publica el ritmo de 7 días como proyección de cierre. No es un forecast de demanda. Empatar 36,503 exige 16,761 más antes de cierre.</p>
-          <p class="xs subtle mt">MOS digest · last7Daily como proxy</p>
-        </div>
+        ${item("Producido hoy", fmt(s.producedToday), `${s.machines} máquinas · ${fmt(b.per)} c/u`, "Impresiones en production_logs desde medianoche America/Tijuana hasta el corte. No es el cierre de turno; es “hasta ahora”.", "MOS production_logs · corte del día")}
+        ${item("Ritmo 7 días", fmt(s.last7Daily) + "/día", `${fmt(s.last7Total)} en 7 días`, "Suma de impresiones de 7 días, dividida entre días de planta. Único ritmo oficial del digest.", "MOS production_logs · ventana 7 días")}
+        ${item("En máquina ahora", fmt(s.onMachineUnits), `${s.onMachineJobs} trabajos · ~${b.feedHours.toFixed(1)} h`, "Unidades en tableros MAQUINA*. Trabajo que las prensas ya pueden correr.", "MOS boards MAQUINA*")}
+        ${item("Listo para programar", fmt(s.readyUnits), `${s.readyJobs} trabajos`, "Órdenes en READY TO SCHEDULED: arte y BOM listos, aún no cargadas a máquina.", "MOS board READY TO SCHEDULED")}
+        ${item("Vencen hoy", fmt(s.dueTodayUnits), `${s.dueTodayOrders} órdenes · ${days(s.dueTodayUnits, s.last7Daily)} días de trabajo`, "Unidades cuya fecha de vencimiento es hoy. Demanda, no capacidad.", "MOS órdenes · due date = hoy", s.dueTodayUnits > 0 ? "warn" : "")}
+        ${item("Ya atrasadas", fmt(s.lateUnits), `${days(s.lateUnits, s.last7Daily)} días al ritmo actual`, "Órdenes abiertas con due date anterior a hoy. O se priorizan, o se re-prometen.", "MOS órdenes · due date < hoy", "danger")}
+        ${item("Vencen en 7 días", fmt(s.next7Units), `${s.next7Orders} órdenes`, "Demanda, no capacidad. Si blancos no se mueven, esto se convierte en atrasadas la semana siguiente.", "MOS órdenes · due date próximos 7 días")}
+        ${item("Esperando blancos", fmt(s.blanksUnits), `${s.blanksOrders} órdenes · ${days(s.blanksUnits, s.last7Daily)} días parados`, "Board BLANKS: no hay tela/garment. Este es el constraint.", "MOS board BLANKS", "danger")}
+        ${item("First-pass (calidad)", pct(b.firstPass) + "%", "Inverso del rechazo de unidades", "Porcentaje de unidades inspeccionadas que no se rechazan. MOS no guarda un score de calidad.", "MOS QC · 1 − (rechazadas / inspeccionadas)", s.rejectPct >= 5 ? "warn" : "ok")}
+        ${item("Rechazo QC (7 días)", pct(s.rejectPct) + "%", `~${fmt(b.rejectLoss)} impresiones perdidas/día`, "quantity_rejected / quantity_inspected (unidades, no registros). Apparel sano: 2–5%.", "MOS qc_records · 7 días", s.rejectPct >= 5 ? "danger" : "ok")}
+        ${item("Proyección al ritmo", fmt(s.projection), "Si el resto del día corre al promedio 7 días", `El digest publica el ritmo de 7 días como proyección de cierre. Empatar ${fmt(s.last7Daily)} exige ${fmt(b.gap)} más antes de cierre.`, "MOS digest · last7Daily como proxy")}
       </div>
     </section>
+    <footer>Corte ${esc(captured)} · fuente digest MOS vivo · se actualiza cada mañana con el post de #Production.</footer>
+  </div>`;
+    }
 
-    <footer>
-      Corte 2026-08-27 13:18 PDT · fuente digest MOS vivo · no es el Command Center.
-    </footer>
-  </div>
+    function item(label, value, hint, meaning, source, tone) {
+      return `<div class="inner">
+          <div class="row"><p class="kicker">${label}</p><p class="num sm ${tone || ""}">${value}</p></div>
+          <p class="xs muted">${hint}</p>
+          <p class="sm mt">${meaning}</p>
+          <p class="xs subtle mt">${source}</p>
+        </div>`;
+    }
+
+    render(FALLBACK);
+    fetch("/digest.json?t=" + Date.now(), { cache: "no-store" })
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => { if (d && d.producedToday != null) render(d); })
+      .catch(() => {});
+  </script>
 </body>
 </html>
