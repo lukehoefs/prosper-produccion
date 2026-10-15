@@ -1,31 +1,27 @@
 {
-  "date": "2026-10-14",
-  "weekday": "miércoles",
-  "titleDate": "miércoles 14 oct",
-  "producedToday": 35760,
-  "machines": 14,
-  "last7Total": 279455,
-  "last7Daily": 55891,
-  "onMachineUnits": 105546,
-  "onMachineJobs": 38,
-  "readyUnits": 14232,
-  "readyJobs": 5,
-  "dueTodayUnits": 7485,
-  "dueTodayOrders": 1,
-  "lateUnits": 273041,
-  "projection": 55891,
-  "next7Units": 215027,
-  "next7Orders": 70,
-  "blanksUnits": 212816,
+  "date": "2026-10-15",
+  "weekday": "jueves",
+  "titleDate": "jueves 15 oct",
+  "producedToday": 28148,
+  "machines": 16,
+  "last7Total": 300270,
+  "last7Daily": 60054,
+  "onMachineUnits": 48781,
+  "onMachineJobs": 22,
+  "readyUnits": 13332,
+  "readyJobs": 6,
+  "dueTodayUnits": 108570,
+  "dueTodayOrders": 37,
+  "lateUnits": 260063,
+  "projection": 60054,
+  "next7Units": 130446,
+  "next7Orders": 48,
+  "blanksUnits": 208728,
   "blanksOrders": 124,
-  "rejectPct": 0.31,
-  "capturedAt": "2026-10-14T06:46:02-07:00",
+  "rejectPct": 0.21,
+  "capturedAt": "2026-10-15T06:43:47-07:00",
   "source": "live-digest",
   "byDay": [
-    {
-      "date": "2026-10-07",
-      "produced": 32224
-    },
     {
       "date": "2026-10-08",
       "produced": 46816
@@ -45,6 +41,10 @@
     {
       "date": "2026-10-13",
       "produced": 62835
+    },
+    {
+      "date": "2026-10-14",
+      "produced": 72111
     }
   ]
 }
