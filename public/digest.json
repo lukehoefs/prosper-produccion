@@ -1,7 +1,7 @@
 {
-  "date": "2026-10-30",
-  "weekday": "viernes",
-  "titleDate": "viernes 30 oct",
+  "date": "2026-11-02",
+  "weekday": "lunes",
+  "titleDate": "martes 27 oct",
   "producedToday": 32608,
   "machines": 15,
   "last7Total": 248840,
@@ -19,13 +19,9 @@
   "blanksUnits": 0,
   "blanksOrders": 0,
   "rejectPct": 0.4,
-  "capturedAt": "2026-10-30T06:44:40-07:00",
+  "capturedAt": "2026-11-02T06:49:48-08:00",
   "source": "live-digest",
   "byDay": [
-    {
-      "date": "2026-10-23",
-      "produced": 7956
-    },
     {
       "date": "2026-10-26",
       "produced": 44872
