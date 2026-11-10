@@ -1,6 +1,6 @@
 {
-  "date": "2026-11-09",
-  "weekday": "lunes",
+  "date": "2026-11-10",
+  "weekday": "martes",
   "titleDate": "viernes 6 nov",
   "producedToday": 32608,
   "machines": 15,
@@ -19,13 +19,9 @@
   "blanksUnits": 0,
   "blanksOrders": 0,
   "rejectPct": 0.4,
-  "capturedAt": "2026-11-09T07:00:20-08:00",
+  "capturedAt": "2026-11-10T06:48:30-08:00",
   "source": "live-digest",
   "byDay": [
-    {
-      "date": "2026-11-02",
-      "produced": 39654
-    },
     {
       "date": "2026-11-03",
       "produced": 41999
@@ -36,11 +32,15 @@
     },
     {
       "date": "2026-11-05",
-      "produced": 44657
+      "produced": 44656
     },
     {
       "date": "2026-11-06",
       "produced": 9194
+    },
+    {
+      "date": "2026-11-09",
+      "produced": 37962
     }
   ]
 }
