@@ -1,10 +1,10 @@
 {
-  "date": "2026-11-16",
-  "weekday": "lunes",
+  "date": "2026-11-18",
+  "weekday": "miércoles",
   "titleDate": "lunes 16 nov",
   "producedToday": 0,
   "machines": 0,
-  "last7Total": 162191,
+  "last7Total": 162190,
   "last7Daily": 32438,
   "onMachineUnits": 20476,
   "onMachineJobs": 3,
@@ -19,17 +19,9 @@
   "blanksUnits": 0,
   "blanksOrders": 0,
   "rejectPct": 0.64,
-  "capturedAt": "2026-11-16T07:13:48-08:00",
-  "source": "live-mos-fallback",
+  "capturedAt": "2026-11-18T07:18:25-08:00",
+  "source": "live-digest",
   "byDay": [
-    {
-      "date": "2026-11-09",
-      "produced": 37622
-    },
-    {
-      "date": "2026-11-10",
-      "produced": 46172
-    },
     {
       "date": "2026-11-11",
       "produced": 51407
@@ -37,6 +29,10 @@
     {
       "date": "2026-11-12",
       "produced": 26990
+    },
+    {
+      "date": "2026-11-17",
+      "produced": 18447
     }
   ]
 }
