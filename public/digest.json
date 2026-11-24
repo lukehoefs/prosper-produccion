@@ -1,7 +1,7 @@
 {
-  "date": "2026-11-23",
-  "weekday": "lunes",
-  "titleDate": "lunes 16 nov",
+  "date": "2026-11-24",
+  "weekday": "martes",
+  "titleDate": "lunes 23 nov",
   "producedToday": 0,
   "machines": 0,
   "last7Total": 162190,
@@ -19,7 +19,7 @@
   "blanksUnits": 0,
   "blanksOrders": 0,
   "rejectPct": 0.64,
-  "capturedAt": "2026-11-23T07:06:02-08:00",
+  "capturedAt": "2026-11-24T06:53:45-08:00",
   "source": "live-digest",
   "byDay": [
     {
@@ -33,6 +33,10 @@
     {
       "date": "2026-11-19",
       "produced": 21317
+    },
+    {
+      "date": "2026-11-23",
+      "produced": 39933
     }
   ]
 }
