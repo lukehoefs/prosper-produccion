@@ -10,21 +10,33 @@
   "onMachineJobs": 1,
   "readyUnits": 0,
   "readyJobs": 0,
-  "dueTodayUnits": 0,
-  "dueTodayOrders": 0,
-  "lateUnits": 0,
+  "dueTodayUnits": 325,
+  "dueTodayOrders": 1,
+  "lateUnits": 20347,
   "projection": 15602,
-  "next7Units": 0,
-  "next7Orders": 0,
+  "next7Units": 11446,
+  "next7Orders": 3,
   "blanksUnits": 0,
   "blanksOrders": 0,
-  "rejectPct": 0.0,
-  "capturedAt": "2026-11-26T07:00:00-08:00",
+  "rejectPct": 0.89,
+  "capturedAt": "2026-11-26T07:22:54-08:00",
   "source": "live-mos-fallback",
   "byDay": [
-    {"date": "2026-11-19", "produced": 21317},
-    {"date": "2026-11-23", "produced": 38750},
-    {"date": "2026-11-24", "produced": 13224},
-    {"date": "2026-11-25", "produced": 4717}
+    {
+      "date": "2026-11-19",
+      "produced": 21317
+    },
+    {
+      "date": "2026-11-23",
+      "produced": 38750
+    },
+    {
+      "date": "2026-11-24",
+      "produced": 13224
+    },
+    {
+      "date": "2026-11-25",
+      "produced": 4717
+    }
   ]
 }
